@@ -10,6 +10,8 @@
 
 ### 🐛 Bug fixes
 
+- [iOS] Call `createRootViewController` from the `ExpoReactNativeFactoryDelegate`.
+
 ### 💡 Others
 
 ## 2.3.13 — 2025-05-08
