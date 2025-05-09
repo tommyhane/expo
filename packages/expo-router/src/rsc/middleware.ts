@@ -8,10 +8,11 @@
 // This module is bundled with Metro in web/react-server mode and redirects to platform specific renderers.
 import type { RenderRscArgs } from '@expo/server/build/middleware/rsc';
 import Constants from 'expo-constants';
-import { asyncServerImport } from 'expo-router/_async-server-import';
 import path from 'node:path';
 
 import { renderRsc } from './rsc-renderer';
+
+declare const $$require_external: typeof require;
 
 const debug = require('debug')('expo:server:rsc-renderer');
 
@@ -146,14 +147,9 @@ export async function renderRscWithImportsAsync(
       },
       async loadServerModuleRsc(file) {
         debug('loadServerModuleRsc', file);
-        const filePath = path.join('../../../', file);
-        const m = await asyncServerImport(filePath);
-
-        // TODO: This is a hack to workaround a cloudflare/metro issue where there's an extra `default` wrapper.
-        if (typeof caches !== 'undefined') {
-          return m.default;
-        }
-        return m;
+        // NOTE(@kitten): [WORKAROUND] Assumes __dirname is at `dist/server/_expo/functions/_flight`
+        const filePath = path.join(__dirname, '../../../', file);
+        return $$require_external(filePath);
       },
 
       entries: entries!,
@@ -170,9 +166,9 @@ export async function renderRscAsync(
     distFolder,
     {
       router: () => {
-        // Assumes this file is saved to: `dist/server/_expo/functions/_flight/[...rsc].js`
-        const filePath = `../../rsc/${platform}/router.js`;
-        return asyncServerImport(filePath);
+        // NOTE(@kitten): [WORKAROUND] Assumes __dirname is at `dist/server/_expo/functions/_flight`
+        const filePath = path.join(__dirname, `../../rsc/${platform}/router.js`);
+        return $$require_external(filePath);
       },
     },
     args
